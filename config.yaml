@@ -1,0 +1,44 @@
+stage_1:
+  model_file: Expert_Network_300
+  model_save_name: temp.pt
+  use_resnet_weights: False
+  datasets:
+      words: data_word
+      objects: data_object
+      faces: data_imdb_face
+      combined: get_datasets_stage1
+      objects_path: data/imagenet_objects_cropped
+      faces_size: [200,35,35]
+      words_size: [200,35,35]
+      objects_size: [200,35,35]
+      repeat: 1
+      frontface: 0
+  batchsize: 64
+  num_words: 50
+  num_objects: 50
+  num_faces: 50
+  training:
+      epochs: 50
+      learning_rate: 0.0005
+      initial_cv_weight: 0.1
+      final_cv_weight: 0.0
+      class_weights: [1.0,1.0,1.0]
+      
+stage_2:
+  model_file: Expert_Network_stage_2
+  model_save_name: model_300_stage2_flowers.pt
+  expert_dataset:
+      name: flowers
+      dataset: get_flowers
+      num_classes: 10
+      combined: get_datasets_stage2
+      size: 50
+  batchsize: 256
+  training:
+      epochs: 50
+      learning_rate: 0.0005
+      initial_temp: 20.0
+      final_temp: 0.05
+      class_weights: [1.0,1.0,1.0,1.0]
+
+  
