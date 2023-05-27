@@ -17,20 +17,17 @@ import importlib
 import yaml
 
 
-class get_datasets_stage1_multi(object):
+class get_datasets_stage2(object):
 
     def __init__(self, config):
 
         config_file = config
-        with open(config_file) as cf_file:
+
+        with open(config) as cf_file:
             self.config = yaml.safe_load( cf_file.read())
 
         batch_size = self.config['stage_1']['batchsize']
 
-        # faces_dataset = importlib.import_module('data_loaders.' + config['stage_1']['datasets']['faces'])
-        # faces_train = faces_dataset.dataset_train
-        # faces_val = faces_dataset.dataset_val
-        # faces_test = faces_dataset.dataset_test
         face_path = importlib.import_module('data_loaders.' + self.config['stage_1']['datasets']['faces'])
         data_face = getattr(face_path, self.config['stage_1']['datasets']['faces'])
         faces_dataset = data_face(config_file)
@@ -67,26 +64,36 @@ class get_datasets_stage1_multi(object):
         words_test = words_dataset.getDataset("test")
 
 
-        dataset_combined_train = ConcatDataset((words_train, objects_train, faces_train))
-        dataset_combined_val = ConcatDataset((words_val, objects_val, faces_val))
-        dataset_combined_test = ConcatDataset((words_test, objects_test, faces_test))
-
-        work = int(self.config['stage_1']['workers'])
-        print("num_workers = ", work)
-        if work > 0:
-            persist = True
-            mem = True
+        ### no config associated yet: flowers
+        expert = self.config['stage_2']['expert_dataset']['dataset']
+        if expert == "get_flowers":
+            expertise_dataset = importlib.import_module('data_loaders.' + self.config['stage_2']['expert_dataset']['dataset'])
+            expertise_train = expertise_dataset.dataset_train
+            expertise_val = expertise_dataset.dataset_val
+            expertise_test = expertise_dataset.dataset_test
         else: 
-            persist = False
-            mem = False
-        
-        self.dataloader_train = DataLoader(dataset_combined_train, batch_size=batch_size, shuffle=True, num_workers=work, pin_memory=mem, persistent_workers=persist)
-        self.dataloader_val = DataLoader(dataset_combined_val, batch_size=batch_size, shuffle=True, num_workers=work, pin_memory=mem, persistent_workers=persist)
-        self.dataloader_test = DataLoader(dataset_combined_test, batch_size=batch_size, shuffle=True, num_workers=work, pin_memory=mem, persistent_workers=persist)
+            # config version # leaf
+            path = importlib.import_module('data_loaders.' + self.config['stage_2']['expert_dataset']['dataset'])
+            data_word = getattr(path, self.config['stage_2']['expert_dataset']['dataset'])
+            words_dataset = data_word(config_file)
+
+            expertise_train = words_dataset.getDataset("train")
+            expertise_val = words_dataset.getDataset("val")
+            expertise_test = words_dataset.getDataset("test")
+
+
+        dataset_combined_train = ConcatDataset((words_train, objects_train, faces_train,expertise_train))
+        dataset_combined_val = ConcatDataset((words_val, objects_val, faces_val,expertise_val))
+        dataset_combined_test = ConcatDataset((words_test, objects_test, faces_test,expertise_test))
+
+        self.dataloader_train = DataLoader(dataset_combined_train, batch_size=batch_size, shuffle=True)
+        self.dataloader_val = DataLoader(dataset_combined_val, batch_size=batch_size, shuffle=True)
+        self.dataloader_test = DataLoader(dataset_combined_test, batch_size=batch_size, shuffle=True)
 
         print("dataset_combined_train size:" + str(dataset_combined_train.cumulative_sizes[-1]))
         print("dataset_combined_val size:" + str(dataset_combined_val.cumulative_sizes[-1]))
         print("dataset_combined_test size:" + str(dataset_combined_test.cumulative_sizes[-1]))
+
 
 
     def getDataloader(self, split):

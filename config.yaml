@@ -14,6 +14,7 @@ stage_1:
       repeat: 1
       frontface: 0
   batchsize: 64
+  workers: 1
   num_words: 50
   num_objects: 50
   num_faces: 50

@@ -1,0 +1,11 @@
+# all jpg files
+*.jpg
+# all png files
+*.png
+# all tensor files
+*.pt
+# all zip files
+*.zip
+# all txt files
+*.txt
+
