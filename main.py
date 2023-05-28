@@ -16,7 +16,6 @@ from collections import defaultdict
 import yaml
 import pandas as pd
 import importlib
-from utils import *
 from Experiment1 import *
 from Experiment2 import *
 import sys

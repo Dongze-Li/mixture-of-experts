@@ -8,4 +8,6 @@
 *.zip
 # all txt files
 *.txt
-
+ 
+# all log files files
+*.log
